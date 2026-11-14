@@ -1,0 +1,39 @@
+# kotoba-forge configuration. All relative paths are resolved against the project root.
+
+[deck]
+name = "Japanese::Sentences"
+model_name = "JP Sentence (kotoba-forge)"
+# Fixed ids so re-importing updates the existing note type/deck instead of
+# creating a duplicate. Do not change these casually.
+model_id = 1734567890123
+deck_id = 1734567890456
+
+[paths]
+input = "cards.csv"
+out_apkg = "out/kotoba-forge.apkg"
+audio_cache = "out/audio"
+templates = "templates"
+
+[audio]
+# Manual recordings checked before VOICEVOX. Words follow Forvo naming
+# (pronunciation_ja_食べる.mp3); sentences are named after the sentence.
+words_dir = "audio/words"
+sentences_dir = "audio/sentences"
+
+[kanji]
+# KanjiVG SVGs, populated by `python run.py kanji-setup`.
+dir = "data/kanjivg/kanji"
+
+[tts]
+# "voicevox" or "none"
+backend = "voicevox"
+voicevox_url = "http://127.0.0.1:50021"
+engine_dir = "voices/engine"
+# 3 = ずんだもん (ノーマル). Run `python run.py voices` for the full list.
+speaker = 3
+speed = 0.95
+pitch = 0.0
+intonation = 1.0
+sample_rate = 24000
+# If there is no CSV path and no file in audio/words, synthesize the word too.
+word_fallback = true

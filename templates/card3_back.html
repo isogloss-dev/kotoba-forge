@@ -1,0 +1,29 @@
+{{FrontSide}}
+<hr id="answer">
+<div class="jp">{{furigana:SentenceTargetKanji}}</div>
+<div class="target">{{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
+{{#TargetMeaning}}<div class="meaning">{{TargetMeaning}}</div>{{/TargetMeaning}}
+{{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}
+{{StrokeOrder}}
+{{#StrokeOrder}}
+<div class="stroke-credit">Stroke order: <a href="https://kanjivg.tagaini.net/">KanjiVG</a> (CC BY-SA 3.0)</div>
+<script>
+(function () {
+  var figures = document.querySelectorAll(".stroke-toggle");
+  for (var i = 0; i < figures.length; i++) {
+    (function (figure) {
+      function toggle() {
+        figure.classList.toggle("show-color");
+      }
+      figure.addEventListener("click", toggle);
+      figure.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggle();
+        }
+      });
+    })(figures[i]);
+  }
+})();
+</script>
+{{/StrokeOrder}}

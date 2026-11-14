@@ -1,0 +1,132 @@
+.card {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  font-size: 28px;
+  line-height: 2.0;
+  text-align: center;
+  color: #1a1a1a;
+  background: #fafafa;
+  padding: 12px 6px;
+}
+
+.jp {
+  line-height: 2.1;
+}
+
+ruby {
+  ruby-position: over;
+}
+
+rt {
+  font-size: 0.55em;
+  color: #555;
+  font-weight: 400;
+}
+
+hr#answer {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 16px auto;
+  width: 70%;
+}
+
+.translation {
+  font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
+  font-size: 19px;
+  color: #333;
+  margin-top: 12px;
+}
+
+.target {
+  font-size: 21px;
+  margin-top: 10px;
+}
+
+.meaning {
+  font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
+  font-size: 17px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.audio {
+  margin-top: 12px;
+}
+
+.strokes {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.strokes figure {
+  margin: 0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.strokes figure.stroke-toggle {
+  cursor: pointer;
+}
+
+.strokes img.colored {
+  display: none;
+}
+
+.strokes figure.stroke-toggle.show-color img.plain {
+  display: none;
+}
+
+.strokes figure.stroke-toggle.show-color img.colored {
+  display: inline;
+}
+
+.strokes .stroke-toggle:focus {
+  outline: 2px solid #888;
+  outline-offset: 2px;
+}
+
+.strokes img {
+  width: 109px;
+  height: 109px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.strokes figcaption {
+  font-size: 15px;
+  color: #555;
+}
+
+.stroke-credit {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
+
+.stroke-credit a {
+  color: #888;
+}
+
+.nightMode .card {
+  color: #e6e6e6;
+  background: #2b2b2b;
+}
+
+.nightMode rt {
+  color: #b9b9b9;
+}
+
+.nightMode .translation,
+.nightMode .target,
+.nightMode .meaning {
+  color: #cfcfcf;
+}
+
+.nightMode .stroke-credit,
+.nightMode .stroke-credit a {
+  color: #aaa;
+}

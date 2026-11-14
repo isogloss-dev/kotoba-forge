@@ -1,0 +1,7 @@
+sentence,target,sentence_meaning,target_meaning,target_reading,word_audio,tags,source
+昨日は寿司を食べた。,食べる,I ate sushi yesterday.,to eat,,,"food,verb",manual
+お菓子が好きだ。,お菓子,I like sweets.,sweets; snack,,,"food,noun",manual
+三人で映画を見た。,映画,The three of us watched a movie.,movie; film,,,noun,manual
+彼はその仕事を気に入った。,気に入る,He liked that job.,to like; to be pleased with,,,verb,manual
+コーヒーを飲みながら本を読む。,読む,I read a book while drinking coffee.,to read,,,verb,manual
+雨が降っている。,降る,It is raining.,to fall (rain),,,"verb,weather",manual
