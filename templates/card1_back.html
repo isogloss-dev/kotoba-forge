@@ -1,5 +1,13 @@
-{{FrontSide}}
+<div class = "target-line">
+{{#SentenceAudio}}<div class="audio auto-play">{{SentenceAudio}}</div>{{/SentenceAudio}}
+<div class="jp">{{furigana:SentenceFurigana}}</div>
+</div>
+
+<div class = "target-line">
+<div class="target">The meaning of {{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
+{{#WordAudio}}<div class="audio">{{WordAudio}}</div>{{/WordAudio}}
+</div>
+
 <hr id="answer">
-{{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}
-<div class="target">{{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
 {{#TargetMeaning}}<div class="meaning">{{TargetMeaning}}</div>{{/TargetMeaning}}
+{{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}

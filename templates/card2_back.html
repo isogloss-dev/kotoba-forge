@@ -1,7 +1,9 @@
-{{FrontSide}}
-<hr id="answer">
-<div class="jp">{{furigana:SentenceFurigana}}</div>
-<div class="target">{{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
-{{#TargetMeaning}}<div class="meaning">{{TargetMeaning}}</div>{{/TargetMeaning}}
+<div class="jp">{{furigana:SentenceTargetKanji}}</div>
 {{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}
-{{#SentenceAudio}}<div class="audio">{{SentenceAudio}}</div>{{/SentenceAudio}}
+<div class="target">The reading of {{Target}}</div>
+
+<hr id="answer">
+<div class = "target-line">
+<div class="target">{{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
+{{#WordAudio}}<div class="audio">{{WordAudio}}</div>{{/WordAudio}}
+</div>

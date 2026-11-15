@@ -1,9 +1,18 @@
-{{FrontSide}}
-<hr id="answer">
-<div class="jp">{{furigana:SentenceTargetKanji}}</div>
-<div class="target">{{Target}}{{#TargetReading}}（{{TargetReading}}）{{/TargetReading}}</div>
-{{#TargetMeaning}}<div class="meaning">{{TargetMeaning}}</div>{{/TargetMeaning}}
+<div class = "target-line">
+{{#SentenceAudio}}<div class="audio">{{SentenceAudio}}</div>{{/SentenceAudio}}
+<div class="jp">{{furigana:SentenceTargetKana}}</div>
+</div>
+
 {{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}
+
+<div class = "target-line">
+<div class="target">The kanji for {{#TargetReading}}（{{TargetReading}}）{{/TargetReading}} {{TargetMeaning}} </div>
+{{#WordAudio}}<div class="audio">{{WordAudio}}</div>{{/WordAudio}}
+</div>
+
+<hr id="answer">
+<div class="target">{{Target}}</div>
+
 {{StrokeOrder}}
 {{#StrokeOrder}}
 <div class="stroke-credit">Stroke order: <a href="https://kanjivg.tagaini.net/">KanjiVG</a> (CC BY-SA 3.0)</div>

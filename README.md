@@ -214,6 +214,8 @@ style.css
 Edit them and rebuild for future packages. Once a deck is imported, Anki owns its
 copy; use *Tools -> Manage Note Types -> Cards* from then on.
 
+Notice: due to workarounds with audio auto-play, to work properly default templates require Anki auto-play to be turned off
+
 ## Project layout
 
 ```

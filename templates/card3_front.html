@@ -1,2 +1,33 @@
+<div class = "target-line">
+{{#SentenceAudio}}<div class="audio auto-play">{{SentenceAudio}}</div>{{/SentenceAudio}}
 <div class="jp">{{furigana:SentenceTargetKana}}</div>
-{{#SentenceAudio}}<div class="audio">{{SentenceAudio}}</div>{{/SentenceAudio}}
+</div>
+
+{{#SentenceMeaning}}<div class="translation">{{SentenceMeaning}}</div>{{/SentenceMeaning}}
+
+<div class = "target-line">
+<div class="target">The kanji for {{#TargetReading}}（{{TargetReading}}）{{/TargetReading}} {{TargetMeaning}} </div>
+{{#WordAudio}}<div class="audio">{{WordAudio}}</div>{{/WordAudio}}
+</div>
+
+<script>
+(function () {
+	// Anki on desktop and mobile usually fires this hook when the card is ready.
+  if (typeof onShownHook !== "undefined") {
+    onShownHook.push(function () {
+      var btn = document.querySelector(".auto-play .replay-button");
+      if (btn) {
+        btn.click();
+      }
+    });
+  } else {
+		// Fallback for environments that do not expose onShownHook.
+    window.addEventListener("load", function () {
+      var btn = document.querySelector(".auto-play .replay-button");
+      if (btn) {
+        btn.click();
+      }
+    });
+  }
+})();
+</script>

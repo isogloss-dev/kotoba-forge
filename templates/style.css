@@ -52,6 +52,20 @@ hr#answer {
   margin-top: 12px;
 }
 
+.target-line {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.target-line .target,
+.target-line .audio {
+  margin-top: 0;
+}
+
 .strokes {
   display: flex;
   justify-content: center;
