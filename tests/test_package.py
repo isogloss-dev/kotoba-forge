@@ -16,8 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import genanki
+
 from jpcard.analyze import Analyzer  # noqa: E402
-from jpcard.anki import build_package, build_model  # noqa: E402
+from jpcard.anki import _required_fields, build_model, build_package  # noqa: E402
 from jpcard.config import load_config  # noqa: E402
 from jpcard.models import CardRow  # noqa: E402
 from jpcard.pipeline import run_batch  # noqa: E402
@@ -32,10 +34,33 @@ class PackageTests(unittest.TestCase):
 
     def test_model_requires_one_field_per_template(self) -> None:
         model = build_model(load_config())
+        names = [field["name"] for field in model.fields]
         self.assertEqual(len(model._req), 3)
-        for _, kind, fields in model._req:
+        # The prompt field must be the sentence, never optional audio that a
+        # template happens to place first inside {{#SentenceAudio}}.
+        expected = ["SentenceFurigana", "SentenceTargetKanji", "SentenceTargetKana"]
+        for index, (_, kind, fields) in enumerate(model._req):
             self.assertEqual(kind, "any")
             self.assertEqual(len(fields), 1)
+            self.assertEqual(names[fields[0]], expected[index])
+
+    def test_conditional_audio_is_not_a_required_field(self) -> None:
+        model = genanki.Model(
+            1,
+            "conditional",
+            fields=[{"name": "Sentence"}, {"name": "SentenceAudio"}],
+            templates=[
+                {
+                    "name": "card",
+                    "qfmt": (
+                        "{{#SentenceAudio}}{{SentenceAudio}}{{/SentenceAudio}}"
+                        "<div>{{furigana:Sentence}}</div>"
+                    ),
+                    "afmt": "",
+                }
+            ],
+        )
+        self.assertEqual(_required_fields(model), [[0, "any", [0]]])
 
     def test_one_note_three_cards(self) -> None:
         cfg = load_config()

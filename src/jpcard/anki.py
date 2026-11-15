@@ -118,9 +118,37 @@ def load_templates(cfg: Config) -> tuple[list[dict], str]:
 # it treats "furigana:Field" as an unknown variable, so every field looks
 # required and notes end up with zero cards. We compute req ourselves from the
 # plain (non-conditional) field references on the front.
-_FIELD_REF_RE = re.compile(
-    r"\{\{(?![/#^])\s*(?:[A-Za-z]+:)?([A-Za-z0-9_]+)\s*\}\}"
-)
+_TAG_RE = re.compile(r"\{\{\s*([#^/]?)([^{}]*?)\s*\}\}")
+_FIELD_NAME_RE = re.compile(r"^(?:[A-Za-z]+:)?([A-Za-z0-9_]+)$")
+
+
+def _front_field_refs(qfmt: str) -> list[str]:
+    """Field references on the front, preferring ones outside {{#...}} blocks.
+
+    Optional extras such as audio live in conditionals, and templates may put
+    them above the sentence. A conditional reference must never become the
+    template's required field, or the card disappears whenever the note has no
+    audio.
+    """
+    unconditional: list[str] = []
+    anywhere: list[str] = []
+    depth = 0
+    for match in _TAG_RE.finditer(qfmt):
+        marker, body = match.group(1), match.group(2).strip()
+        if marker in ("#", "^"):
+            depth += 1
+            continue
+        if marker == "/":
+            depth = max(0, depth - 1)
+            continue
+        name_match = _FIELD_NAME_RE.match(body)
+        if name_match is None:
+            continue
+        name = name_match.group(1)
+        anywhere.append(name)
+        if depth == 0:
+            unconditional.append(name)
+    return unconditional or anywhere
 
 
 def _required_fields(model: genanki.Model) -> list[list]:
@@ -128,8 +156,7 @@ def _required_fields(model: genanki.Model) -> list[list]:
     req: list[list] = []
     for index, template in enumerate(model.templates):
         found: list[int] = []
-        for match in _FIELD_REF_RE.finditer(template["qfmt"]):
-            name = match.group(1)
+        for name in _front_field_refs(template["qfmt"]):
             if name in names:
                 field_index = names.index(name)
                 if field_index not in found:

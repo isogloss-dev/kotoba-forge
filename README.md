@@ -4,8 +4,8 @@ Batch-build Japanese sentence cards for Anki. Give it a sentence and the word
 you care about; it produces a deck with three furigana renderings, optional
 audio, and clickable stroke-order diagrams.
 
-This is a personal, AI-assisted project. It is tested on Windows; the Linux and
-macOS code paths are implemented but have not yet been exercised by the author.
+This is a personal, AI-assisted project. It is tested on Windows and Linux;
+the macOS code path is implemented but has not yet been exercised by the author.
 
 ## What it does
 
@@ -27,9 +27,11 @@ re-importing updates existing notes instead of duplicating them.
 
 ## Status
 
-Tested with Anki 2.1.50+ on Windows. Linux/macOS support is implemented in the
-code and setup script, but not yet tested by the author. Bug reports and patches
-are welcome.
+Tested with Anki 2.1.50+ on Windows. On Linux the setup script, unit tests,
+VOICEVOX audio generation and `.apkg` output have been exercised; importing that
+deck into Anki was not part of the Linux check. macOS support is implemented in
+the code and setup script, but not yet tested by the author. Bug reports and
+patches are welcome.
 
 ## Quick start
 
@@ -39,10 +41,13 @@ result.
 ```bash
 git clone https://github.com/isogloss-dev/kotoba-forge.git
 cd kotoba-forge
-python scripts/setup.py
+python3 scripts/setup.py        # Linux / macOS
+py scripts/setup.py             # Windows
 ```
 
-On Windows, `py scripts/setup.py` works too.
+On Linux and macOS the interpreter is usually `python3`; a bare `python` often
+does not exist. If `python3` is older than 3.11, run the script with a newer
+interpreter such as `python3.12 scripts/setup.py`.
 
 The setup script:
 
@@ -63,6 +68,11 @@ Then run it with the interpreter from the virtualenv:
 # Windows
 .venv\Scripts\python run.py batch cards.csv
 ```
+
+Dependencies are installed only into `.venv`. Running `python3 run.py ...` with
+the system Python fails with `ModuleNotFoundError: No module named 'genanki'`
+(or another package); use the interpreter path above, or activate the
+environment first.
 
 Or activate the environment first; `pip install -e .` also installs a
 `kotoba-forge` console command.
@@ -99,11 +109,14 @@ The release archives are `.7z`; `7z x` or the Windows 7-Zip GUI will extract
 them. If no engine is present, the tool still uses CSV paths and files from the
 audio folders; `--tts none` forces that behaviour.
 
-VOICEVOX stores its dictionary and presets outside the project:
-`%LOCALAPPDATA%\voicevox-engine` on Windows, and the platform data directory on
-Linux/macOS. Normally it can create that itself. If the location is not writable
-(a restricted sandbox, for example), point it at `voices/userdata` with a
-directory junction on Windows:
+When kotoba-forge starts the engine on Linux or Windows, it points VOICEVOX's
+dictionary and preset storage at `voices/userdata` (`XDG_DATA_HOME` on Linux,
+`LOCALAPPDATA` on Windows) instead of the real home directory. That keeps audio
+generation working in a restricted sandbox or on a machine with a read-only
+profile. On macOS the engine still uses
+`~/Library/Application Support/voicevox-engine`, which must be writable. If you
+launch the engine yourself it uses the platform data directory; on Windows you
+can redirect that with a directory junction:
 
 ```
 cmd /c mklink /J "%LOCALAPPDATA%\voicevox-engine" "<project>\voices\userdata"
@@ -235,7 +248,7 @@ voices/engine/         VOICEVOX (gitignored)
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 ```
 
 ## Known limits

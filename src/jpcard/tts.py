@@ -100,6 +100,15 @@ class VoicevoxTTS:
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
 
+        # VOICEVOX keeps its user dictionary and presets under the platform
+        # data directory. A read-only home (sandbox, locked-down machine) makes
+        # the engine exit before it listens, so keep that state in the project.
+        userdata = (self.engine_dir.parent / "userdata").resolve()
+        userdata.mkdir(parents=True, exist_ok=True)
+        env["XDG_DATA_HOME"] = str(userdata)  # Linux / BSD
+        if os.name == "nt":
+            env["LOCALAPPDATA"] = str(userdata)
+
         self._process = subprocess.Popen(
             [str(exe), "--host", "127.0.0.1", "--port", str(self.port), "--output_log_utf8"],
             cwd=str(self.engine_dir),

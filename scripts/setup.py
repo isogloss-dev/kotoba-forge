@@ -5,8 +5,8 @@ Creates a virtualenv, installs the package, prepares the audio folders,
 copies the example CSV to cards.csv on first run, and downloads KanjiVG.
 
 Usage:
-    python scripts/setup.py
-    python scripts/setup.py --no-venv --no-install --no-kanji
+    python3 scripts/setup.py
+    python3 scripts/setup.py --no-venv --no-install --no-kanji
 """
 from __future__ import annotations
 
@@ -37,6 +37,30 @@ def venv_python(venv: Path) -> Path:
     return venv / "bin" / "python"
 
 
+def has_pip(python: Path) -> bool:
+    """True when the interpreter can actually run pip."""
+    try:
+        result = subprocess.run(
+            [str(python), "-m", "pip", "--version"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
+def bootstrap_pip(python: Path) -> bool:
+    """Try to install pip into an existing environment with ensurepip."""
+    log(f"pip is missing from {python}; trying ensurepip ...")
+    try:
+        run([python, "-m", "ensurepip", "--upgrade", "--default-pip"])
+    except (subprocess.CalledProcessError, OSError):
+        return False
+    return has_pip(python)
+
+
 def engine_executable() -> Path | None:
     directory = ROOT / "voices" / "engine"
     names = ("run.exe", "run") if os.name == "nt" else ("run", "run.exe")
@@ -61,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if sys.version_info < MIN_PYTHON:
         log(f"Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ is required; found {sys.version.split()[0]}")
+        log("Install a newer Python and run this script with it, for example:")
+        log(f"  python3.{MIN_PYTHON[1]} scripts/setup.py")
         return 1
 
     if args.no_venv:
@@ -74,11 +100,33 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 run([sys.executable, "-m", "venv", str(venv)])
             except subprocess.CalledProcessError:
-                log("Could not create a virtualenv. On Debian/Ubuntu install python3-venv,")
-                log("or rerun with --no-venv.")
+                log("Could not create a virtualenv (the venv/ensurepip module may be missing).")
+                log("On Debian/Ubuntu: sudo apt install python3-venv")
+                log("If a partial .venv was left behind, remove it before rerunning:")
+                log("  rm -rf .venv")
+                log("(Rerunning with --no-venv installs into the current interpreter,")
+                log("which some distributions block under PEP 668.)")
                 return 1
         else:
             log(f"Reusing virtual environment in {venv}")
+
+    if not args.no_install and not has_pip(python):
+        if bootstrap_pip(python):
+            log("pip installed.")
+        else:
+            log("")
+            log(f"{python} exists but has no working pip.")
+            if args.no_venv:
+                log("Install pip for this interpreter (Debian/Ubuntu: sudo apt install python3-pip),")
+                log("or omit --no-venv to use a project virtualenv.")
+            else:
+                log("The virtualenv is incomplete. This usually happens when the Python")
+                log("that created it had no ensurepip/venv support.")
+                log("On Debian/Ubuntu install the venv package for this interpreter, e.g.:")
+                log("  sudo apt install python3-venv      # or python3.12-venv")
+                log("Then remove the broken environment and run setup again:")
+                log(f"  rm -rf {ROOT / '.venv'}")
+            return 1
 
     if not args.no_install:
         try:
@@ -86,6 +134,9 @@ def main(argv: list[str] | None = None) -> int:
             run([python, "-m", "pip", "install", "-e", str(ROOT)])
         except subprocess.CalledProcessError:
             log("Dependency installation failed. Check the network and pip output above.")
+            if args.no_venv:
+                log("A system Python may refuse packages under PEP 668; omit --no-venv")
+                log("to install into the project virtualenv instead.")
             return 1
     else:
         log("Skipping dependency installation (--no-install).")
@@ -124,13 +175,9 @@ def main(argv: list[str] | None = None) -> int:
 
     log("")
     log("Setup complete. Next:")
-    if args.no_venv:
-        command_name = "python" if os.name != "nt" else "py"
-    else:
-        command_name = str(python)
-    log(f"  {command_name} run.py batch cards.csv")
-    log(f"  {command_name} run.py batch cards.csv --dry-run")
-    log(f"  {command_name} run.py voices")
+    log(f"  {python} run.py batch cards.csv")
+    log(f"  {python} run.py batch cards.csv --dry-run")
+    log(f"  {python} run.py voices")
     return 0
 
 
