@@ -19,7 +19,7 @@ from .config import Config, load_config
 from .kanji import setup_kanjivg
 from .models import CardRow
 from .pipeline import read_rows, run_batch, write_errors
-from .tts import TTSError, VoicevoxTTS
+from .tts import TTSError, VoicevoxTTS, check_windows_userdata
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -68,6 +68,10 @@ def _make_tts(cfg: Config, args: argparse.Namespace) -> VoicevoxTTS | None:
     backend = args.tts or cfg.tts_backend
     if getattr(args, "no_audio", False) or backend == "none":
         return None
+
+    warning = check_windows_userdata(cfg.engine_dir)
+    if warning:
+        print(warning)
 
     tts = VoicevoxTTS(
         base_url=cfg.voicevox_url,

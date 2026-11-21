@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import subprocess
 import time
 import urllib.error
@@ -29,6 +30,87 @@ def find_engine_executable(engine_dir: Path | None) -> Path | None:
         candidate = directory / name
         if candidate.is_file():
             return candidate
+    return None
+
+
+def _is_junction(path: Path) -> bool:
+    """True for a directory junction (or a symlink) on Windows."""
+    if os.name != "nt":
+        return path.is_symlink()
+    try:
+        info = os.lstat(path)
+    except OSError:
+        return False
+    attributes = getattr(info, "st_file_attributes", 0)
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
+
+
+def _link_target(path: Path) -> Path | None:
+    try:
+        return path.resolve()
+    except (OSError, RuntimeError):
+        return None
+
+
+def check_windows_userdata(
+    engine_dir: Path | None, local_appdata: Path | None = None
+) -> str | None:
+    """Warn when the Windows VOICEVOX data junction is stale.
+
+    VOICEVOX keeps presets and user dictionaries under
+    ``%LOCALAPPDATA%\\voicevox-engine``. kotoba-forge points LOCALAPPDATA at
+    ``voices/userdata`` for engines it starts itself, so the junction is only
+    needed when the engine is started by hand. A missing link is therefore
+    normal and silent; a link that exists but is broken or aimed at another
+    checkout is easy to miss and worth reporting.
+
+    Return an actionable warning, or None when there is nothing to report.
+    """
+    if os.name != "nt":
+        return None
+    if engine_dir is None or find_engine_executable(engine_dir) is None:
+        return None
+
+    if local_appdata is None:
+        raw = os.environ.get("LOCALAPPDATA")
+        if not raw:
+            return None
+        local_appdata = Path(raw)
+
+    userdata = (Path(engine_dir).parent / "userdata").resolve()
+    link = Path(local_appdata) / "voicevox-engine"
+    create = f'cmd /c mklink /J "%LOCALAPPDATA%\\voicevox-engine" "{userdata}"'
+    hint = "  Engines started by kotoba-forge are unaffected; --tts none skips VOICEVOX."
+
+    if not os.path.lexists(link):
+        # No link is the normal state: engines started by kotoba-forge get
+        # LOCALAPPDATA pointed at voices/userdata. Only a manual launch needs
+        # the junction documented in the README.
+        return None
+
+    if not link.exists():
+        return (
+            f"! VOICEVOX data link is broken: {link}\n"
+            "  Its target folder is missing. Re-run scripts/setup.py to create\n"
+            f"  {userdata}, or replace the link:\n"
+            '    cmd /c rmdir "%LOCALAPPDATA%\\voicevox-engine"\n'
+            f"    {create}\n{hint}"
+        )
+
+    if not _is_junction(link):
+        # A real folder is what a manually started engine creates on its own;
+        # the engine can use it, so leave it alone.
+        return None
+
+    target = _link_target(link)
+    if target is None or not target.is_relative_to(userdata):
+        shown = target if target is not None else "an unreadable target"
+        return (
+            f"! VOICEVOX data link points elsewhere: {link} -> {shown}\n"
+            f"  Expected {userdata}. Replace it:\n"
+            '    cmd /c rmdir "%LOCALAPPDATA%\\voicevox-engine"\n'
+            f"    {create}\n{hint}"
+        )
     return None
 
 

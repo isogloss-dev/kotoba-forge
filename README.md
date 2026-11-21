@@ -6,6 +6,25 @@ audio, and clickable stroke-order diagrams.
 
 This is a personal, AI-assisted project. It is tested on Windows and Linux;
 the macOS code path is implemented but has not yet been exercised by the author.
+Bug reports and patches are welcome.
+
+## The main idea
+
+The point is to target meaning, reading and writing for each word in context,
+and to help automate this a bit. You provide a list of words and sentences as
+examples of those words in context, and the script generates an Anki package
+with 3 card types:
+
+1. A card focused on the meaning of the word. The whole sentence is provided
+   with furigana and [optional] audio for context.
+2. A card focused on the reading of the word. The target word is left as pure
+   kanji in the example sentence.
+3. A card focused on the writing of the word. In the example sentence the
+   target word is written in hiragana, and the audio is also present. The back
+   of the card has a kanji stroke-order diagram.
+
+Notice: due to the audio auto-play workaround, the default templates require
+Anki auto-play to be turned off.
 
 ## What it does
 
@@ -16,7 +35,7 @@ For each CSV row:
 3. the same sentence with the target word written in hiragana
 4. optional audio for the sentence and the word
 5. [KanjiVG](https://kanjivg.tagaini.net/) stroke-order diagrams for every
-   kanji in the target, on the back of the kanji card
+   kanji in the target, on the back of the writing card
 
 It also writes a standalone `preview.html` with rendered ruby, audio players,
 the token/reading table and any warnings, plus `errors.csv` for rows that could
@@ -24,14 +43,6 @@ not be processed. The `.apkg` is imported into Anki with *File -> Import*.
 
 Notes use stable GUIDs derived from `sentence + target`, so rebuilding and
 re-importing updates existing notes instead of duplicating them.
-
-## Status
-
-Tested with Anki 2.1.50+ on Windows. On Linux the setup script, unit tests,
-VOICEVOX audio generation and `.apkg` output have been exercised; importing that
-deck into Anki was not part of the Linux check. macOS support is implemented in
-the code and setup script, but not yet tested by the author. Bug reports and
-patches are welcome.
 
 ## Quick start
 
@@ -41,23 +52,28 @@ result.
 ```bash
 git clone https://github.com/isogloss-dev/kotoba-forge.git
 cd kotoba-forge
-python3 scripts/setup.py        # Linux / macOS
-py scripts/setup.py             # Windows
+python scripts/setup.py        # Python command according to your OS
 ```
-
-On Linux and macOS the interpreter is usually `python3`; a bare `python` often
-does not exist. If `python3` is older than 3.11, run the script with a newer
-interpreter such as `python3.12 scripts/setup.py`.
 
 The setup script:
 
 - creates `.venv` and installs the package and dependencies;
-- creates `audio/words`, `audio/sentences`, `out` and `voices`;
+- creates `audio/words`, `audio/sentences`, `out`, `voices/engine` and
+  `voices/userdata`;
 - copies `cards.example.csv` to `cards.csv` if the latter is missing;
 - downloads KanjiVG (about 12 MB, 6,703 SVGs) into `data/kanjivg/kanji/`;
 - checks for a local VOICEVOX engine and prints instructions if it is absent.
 
-Useful flags: `--no-venv`, `--no-install`, `--no-kanji`, `--force-kanji`.
+Useful setup flags:
+
+- `--no-venv` — use the interpreter running the script instead of creating or
+  reusing `.venv`.
+- `--no-install` — skip `pip install -e .`; the folders, `cards.csv` and
+  KanjiVG are still prepared.
+- `--no-kanji` — skip the KanjiVG download; stroke order stays empty until
+  `run.py kanji-setup` runs.
+- `--force-kanji` — re-download KanjiVG even if the archive is already there
+  (without `--no-kanji`).
 
 Then run it with the interpreter from the virtualenv:
 
@@ -69,13 +85,15 @@ Then run it with the interpreter from the virtualenv:
 .venv\Scripts\python run.py batch cards.csv
 ```
 
-Dependencies are installed only into `.venv`. Running `python3 run.py ...` with
-the system Python fails with `ModuleNotFoundError: No module named 'genanki'`
-(or another package); use the interpreter path above, or activate the
-environment first.
+Dependencies are installed only into `.venv`. Running the script with the
+system Python fails because the dependencies (`genanki` and others) are not
+installed there; `run.py` names the missing package and prints the virtualenv
+interpreter to use instead.
 
-Or activate the environment first; `pip install -e .` also installs a
-`kotoba-forge` console command.
+The available commands:
+
+In these commands `python` means the virtualenv interpreter shown above, or
+the active environment's `python` after activation (see below).
 
 ```bash
 python run.py batch cards.csv                 # build out/kotoba-forge.apkg
@@ -94,6 +112,37 @@ Outputs:
 - `out/errors.csv` — skipped rows with the reason and token list
 - `out/kotoba-forge.apkg` — unless `--dry-run`
 
+To activate the environment, run one of the commands below. Activation only
+affects the current terminal session (and programs started from it): it
+prepends the environment's scripts folder to `PATH` and sets `VIRTUAL_ENV`.
+`deactivate` or closing the window undoes it; your permanent `PATH` is not
+changed.
+
+```bash
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows (cmd)
+.venv\Scripts\activate.bat
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+Once active, `python` is the virtualenv interpreter and the `kotoba-forge`
+console command that setup installed is on `PATH`:
+
+```bash
+kotoba-forge batch cards.csv
+python run.py batch cards.csv
+```
+
+Activation is optional: the full paths `.venv\Scripts\kotoba-forge.exe`
+(Windows) and `.venv/bin/kotoba-forge` (Linux/macOS) work without it. In
+Windows PowerShell, if scripts are blocked by the execution policy, run
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that window
+first.
+
 ## VOICEVOX (optional)
 
 Audio can come from files or from a local
@@ -105,12 +154,11 @@ voices/engine/run.exe     # Windows
 voices/engine/run         # Linux / macOS
 ```
 
-The release archives are `.7z`; `7z x` or the Windows 7-Zip GUI will extract
-them. If no engine is present, the tool still uses CSV paths and files from the
+If no engine is present, the tool still uses CSV paths and files from the
 audio folders; `--tts none` forces that behaviour.
 
 When kotoba-forge starts the engine on Linux or Windows, it points VOICEVOX's
-dictionary and preset storage at `voices/userdata` (`XDG_DATA_HOME` on Linux,
+dictionary and preset storage under `voices/userdata` (`XDG_DATA_HOME` on Linux,
 `LOCALAPPDATA` on Windows) instead of the real home directory. That keeps audio
 generation working in a restricted sandbox or on a machine with a read-only
 profile. On macOS the engine still uses
@@ -121,6 +169,13 @@ can redirect that with a directory junction:
 ```
 cmd /c mklink /J "%LOCALAPPDATA%\voicevox-engine" "<project>\voices\userdata"
 ```
+
+Setup creates `voices/userdata`, so the link target exists if you choose to
+create the link. It is only needed when you start the engine yourself:
+kotoba-forge already points `LOCALAPPDATA` at `voices/userdata` for engines it
+starts. `batch` and `one` warn only if the link exists but is broken or points
+to another checkout; a missing link is normal. `--tts none` skips the warning
+and VOICEVOX.
 
 ## CSV format
 
@@ -211,10 +266,6 @@ Fields: `Sentence`, `SentenceFurigana`, `SentenceTargetKanji`,
 `SentenceTargetKana`, `StrokeOrder`, `Target`, `TargetReading`, `TargetMeaning`,
 `SentenceMeaning`, `SentenceAudio`, `WordAudio`, `Source`, `Key`.
 
-Three card templates are generated: *1 Furigana*, *2 Target (kanji)*,
-*3 Target (hiragana)*. Audio is on the front of cards 1 and 3, and on the back of
-card 2 so it does not read the answer aloud.
-
 Templates live in `templates/`:
 
 ```
@@ -226,8 +277,6 @@ style.css
 
 Edit them and rebuild for future packages. Once a deck is imported, Anki owns its
 copy; use *Tools -> Manage Note Types -> Cards* from then on.
-
-Notice: due to workarounds with audio auto-play, to work properly default templates require Anki auto-play to be turned off
 
 ## Project layout
 
@@ -243,6 +292,7 @@ src/jpcard/            code
 tests/                 unit tests
 out/                   apkg, preview, errors, media cache (gitignored)
 voices/engine/         VOICEVOX (gitignored)
+voices/userdata/       VOICEVOX data (gitignored, created by setup)
 ```
 
 ## Tests

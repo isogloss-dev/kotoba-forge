@@ -141,7 +141,14 @@ def main(argv: list[str] | None = None) -> int:
     else:
         log("Skipping dependency installation (--no-install).")
 
-    for relative in ("audio/words", "audio/sentences", "out", "voices"):
+    for relative in (
+        "audio/words",
+        "audio/sentences",
+        "out",
+        "voices",
+        "voices/engine",
+        "voices/userdata",
+    ):
         (ROOT / relative).mkdir(parents=True, exist_ok=True)
 
     cards = ROOT / "cards.csv"
